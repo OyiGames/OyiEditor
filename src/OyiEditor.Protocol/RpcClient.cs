@@ -33,7 +33,7 @@ public sealed record RpcClientOptions
 /// </summary>
 public sealed class RpcClient : IAsyncDisposable
 {
-    /// <summary>The protocol version this build speaks (OyiProtocol tag MAJOR).</summary>
+    /// <summary>The protocol version this build speaks (while OyiProtocol is 0.x, the tag MINOR: v0.N.x).</summary>
     public const uint ProtocolVersion = 1;
 
     private const int ReceiveBufferSize = 64 * 1024;
