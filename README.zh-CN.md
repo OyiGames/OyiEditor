@@ -25,7 +25,7 @@ dotnet format OyiEditor.slnx --verify-no-changes --exclude protocol src/OyiEdito
 用协议仓库锁定的 flatc 版本重新生成：
 
 ```bash
-git -C protocol checkout v1.0.1
+git -C protocol checkout v0.1.0
 python scripts/generate_protocol.py --flatc path/to/flatc
 ```
 

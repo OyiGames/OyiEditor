@@ -28,7 +28,7 @@ Set `OYI_EXE` to an engine CLI (`oyi` / `oyi.exe`) to also run the integration t
 moving the submodule to a new tag, regenerate them with the flatc version the protocol repository pins:
 
 ```bash
-git -C protocol checkout v1.0.1
+git -C protocol checkout v0.1.0
 python scripts/generate_protocol.py --flatc path/to/flatc
 ```
 
