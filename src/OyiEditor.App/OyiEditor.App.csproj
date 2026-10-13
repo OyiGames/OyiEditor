@@ -21,4 +21,8 @@
   <ItemGroup>
     <ProjectReference Include="..\OyiEditor.Protocol\OyiEditor.Protocol.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="OyiEditor.App.Tests" />
+  </ItemGroup>
 </Project>

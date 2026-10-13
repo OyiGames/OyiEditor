@@ -2,4 +2,10 @@
   <PropertyGroup>
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\OyiEditor.Protocol.Schema\OyiEditor.Protocol.Schema.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="OyiEditor.Protocol.Tests" />
+  </ItemGroup>
 </Project>

@@ -1,9 +1,11 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/OyiEditor.App/OyiEditor.App.csproj" />
+    <Project Path="src/OyiEditor.Protocol.Schema/OyiEditor.Protocol.Schema.csproj" />
     <Project Path="src/OyiEditor.Protocol/OyiEditor.Protocol.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/OyiEditor.App.Tests/OyiEditor.App.Tests.csproj" />
     <Project Path="tests/OyiEditor.Protocol.Tests/OyiEditor.Protocol.Tests.csproj" />
   </Folder>
 </Solution>
