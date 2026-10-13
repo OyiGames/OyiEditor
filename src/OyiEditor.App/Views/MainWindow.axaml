@@ -1,0 +1,37 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:OyiEditor.App.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="960" d:DesignHeight="600"
+        x:Class="OyiEditor.App.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="OyiEditor"
+        Width="960" Height="600">
+
+  <Design.DataContext>
+    <vm:MainViewModel />
+  </Design.DataContext>
+
+  <DockPanel>
+    <Border DockPanel.Dock="Left" Width="240" Padding="12"
+            BorderThickness="0,0,1,0" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Engine" FontWeight="SemiBold" />
+        <TextBox PlaceholderText="Host" Text="{Binding Host}" />
+        <NumericUpDown Minimum="1" Maximum="65535" Increment="1" FormatString="0" Value="{Binding Port}" />
+        <Button Content="Connect" HorizontalAlignment="Stretch" Command="{Binding ConnectCommand}" />
+        <TextBlock Text="{Binding Status}" Opacity="0.7" />
+      </StackPanel>
+    </Border>
+
+    <DockPanel Margin="12">
+      <DockPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
+        <Button DockPanel.Dock="Right" Content="Send" Margin="8,0,0,0"
+                Command="{Binding SendCommand}" IsDefault="True" />
+        <TextBox PlaceholderText="Command, e.g. ping" Text="{Binding CommandLine}" FontFamily="Consolas, Menlo, monospace" />
+      </DockPanel>
+      <ListBox ItemsSource="{Binding Log}" FontFamily="Consolas, Menlo, monospace" />
+    </DockPanel>
+  </DockPanel>
+</Window>

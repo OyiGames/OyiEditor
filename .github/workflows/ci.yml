@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  lint:
+    name: format & conventions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: dotnet format --verify-no-changes
+        run: dotnet format OyiEditor.slnx --verify-no-changes
+      # ADR-0021: source files are ASCII; Markdown docs are exempt (they come in English / Chinese pairs).
+      - name: ASCII-only sources
+        run: |
+          bad=$(git ls-files -- ':!*.md' ':!LICENSE' | xargs grep -lP '[^\x00-\x7F]' || true)
+          if [ -n "$bad" ]; then echo "Non-ASCII bytes in:"; echo "$bad"; exit 1; fi
+
+  build:
+    name: build & test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Build
+        run: dotnet build OyiEditor.slnx -c Release
+      - name: Test
+        run: dotnet test --solution OyiEditor.slnx -c Release --no-build

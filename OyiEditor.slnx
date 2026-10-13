@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/OyiEditor.App/OyiEditor.App.csproj" />
+    <Project Path="src/OyiEditor.Protocol/OyiEditor.Protocol.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/OyiEditor.Protocol.Tests/OyiEditor.Protocol.Tests.csproj" />
+  </Folder>
+</Solution>
