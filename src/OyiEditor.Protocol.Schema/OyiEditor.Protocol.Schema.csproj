@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Third-party and generated code only: the vendored FlatBuffers C# runtime from the OyiProtocol
+    submodule and the flatc output in Generated/ (scripts/generate_protocol.py). Kept apart from
+    OyiEditor.Protocol so the repository's strict analyzer settings do not apply to code we do not
+    write. Do not add hand-written code here.
+  -->
+  <PropertyGroup>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+    <AnalysisLevel>none</AnalysisLevel>
+    <IsAotCompatible>true</IsAotCompatible>
+    <ProtocolRoot>$(MSBuildThisFileDirectory)../../protocol/</ProtocolRoot>
+  </PropertyGroup>
+
+  <Import Project="$(ProtocolRoot)third_party/flatbuffers-net/OyiProtocol.FlatBuffers.props"
+          Condition="Exists('$(ProtocolRoot)third_party/flatbuffers-net/OyiProtocol.FlatBuffers.props')" />
+
+  <Target Name="CheckProtocolSubmodule" BeforeTargets="CoreCompile">
+    <Error Condition="!Exists('$(ProtocolRoot)third_party/flatbuffers-net/OyiProtocol.FlatBuffers.props')"
+           Text="The OyiProtocol submodule is missing. Run: git submodule update --init" />
+  </Target>
+
+</Project>

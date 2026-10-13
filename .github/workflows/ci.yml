@@ -9,6 +9,8 @@ on:
 env:
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
+  # Vendored and generated code; checked by OyiProtocol's CI and scripts/generate_protocol.py instead.
+  FORMAT_EXCLUDE: protocol src/OyiEditor.Protocol.Schema
 
 jobs:
   lint:
@@ -16,16 +18,37 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: dotnet format --verify-no-changes
-        run: dotnet format OyiEditor.slnx --verify-no-changes
+        run: dotnet format OyiEditor.slnx --verify-no-changes --exclude $FORMAT_EXCLUDE
       # ADR-0021: source files are ASCII; Markdown docs are exempt (they come in English / Chinese pairs).
       - name: ASCII-only sources
         run: |
-          bad=$(git ls-files -- ':!*.md' ':!LICENSE' | xargs grep -lP '[^\x00-\x7F]' || true)
+          bad=$(git ls-files -- ':!*.md' ':!LICENSE' ':!protocol' | xargs grep -lP '[^\x00-\x7F]' || true)
           if [ -n "$bad" ]; then echo "Non-ASCII bytes in:"; echo "$bad"; exit 1; fi
+      - name: ruff (scripts)
+        run: |
+          pip install ruff
+          ruff check scripts
+          ruff format --check scripts
+      # The version comes from the submodule (protocol/scripts/verify.py), the single source of truth.
+      - name: flatc
+        run: |
+          version=$(sed -nE 's/^FLATC_VERSION = "([^"]+)"/\1/p' protocol/scripts/verify.py)
+          curl -fsSL -o flatc.zip "https://github.com/google/flatbuffers/releases/download/v${version}/Linux.flatc.binary.g++-13.zip"
+          mkdir -p "$RUNNER_TEMP/flatc"
+          unzip -q flatc.zip -d "$RUNNER_TEMP/flatc"
+          chmod +x "$RUNNER_TEMP/flatc/flatc"
+          echo "$RUNNER_TEMP/flatc" >> "$GITHUB_PATH"
+      - name: Generated bindings are up to date
+        run: python scripts/generate_protocol.py --check
 
   build:
     name: build & test (${{ matrix.os }})
@@ -36,6 +59,8 @@ jobs:
         os: [windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
@@ -43,3 +68,45 @@ jobs:
         run: dotnet build OyiEditor.slnx -c Release
       - name: Test
         run: dotnet test --solution OyiEditor.slnx -c Release --no-build
+
+  # Against the newest OyiEngine release (oyi serve --rpc --once). Skips until the engine has published one, so
+  # it is not a required check yet.
+  integration:
+    name: engine integration (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, asset: windows-x64.zip, exe: oyi.exe }
+          - { os: macos-latest, asset: macos-arm64.tar.gz, exe: oyi }
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Download the newest OyiEngine release
+        id: engine
+        shell: bash
+        run: |
+          tag=$(gh release view --repo OyiGames/OyiEngine --json tagName --jq .tagName 2>/dev/null || true)
+          if [ -z "$tag" ]; then
+            echo "::notice::OyiEngine has no release yet; skipping the engine integration test."
+            exit 0
+          fi
+          asset="oyi-${tag}-${{ matrix.asset }}"
+          dir="$RUNNER_TEMP/oyi"
+          gh release download "$tag" --repo OyiGames/OyiEngine --pattern "$asset" --dir "$dir"
+          case "$asset" in
+            *.zip) unzip -q "$dir/$asset" -d "$dir" ;;
+            *) tar -xzf "$dir/$asset" -C "$dir" ;;
+          esac
+          echo "OYI_EXE=$dir/${{ matrix.exe }}" >> "$GITHUB_ENV"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+      - name: Test against oyi ${{ steps.engine.outputs.tag }}
+        if: steps.engine.outputs.tag != ''
+        run: dotnet test --solution OyiEditor.slnx -c Release
