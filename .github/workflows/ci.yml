@@ -38,15 +38,20 @@ jobs:
           pip install ruff
           ruff check scripts
           ruff format --check scripts
-      # The version comes from the submodule (protocol/scripts/verify.py), the single source of truth.
+      # flatc from OyiGames/flatbuffers (ADR-0023). The tag comes from the submodule's CI (FLATBUFFERS_TAG), the
+      # single source of truth; generate_protocol.py then checks the version string against verify.py.
       - name: flatc
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          version=$(sed -nE 's/^FLATC_VERSION = "([^"]+)"/\1/p' protocol/scripts/verify.py)
-          curl -fsSL -o flatc.zip "https://github.com/google/flatbuffers/releases/download/v${version}/Linux.flatc.binary.g++-13.zip"
-          mkdir -p "$RUNNER_TEMP/flatc"
-          unzip -q flatc.zip -d "$RUNNER_TEMP/flatc"
-          chmod +x "$RUNNER_TEMP/flatc/flatc"
-          echo "$RUNNER_TEMP/flatc" >> "$GITHUB_PATH"
+          tag=$(sed -nE 's/^  FLATBUFFERS_TAG: *([^ #]+).*/\1/p' protocol/.github/workflows/ci.yml)
+          if [ -z "$tag" ]; then echo "No FLATBUFFERS_TAG in protocol/.github/workflows/ci.yml"; exit 1; fi
+          dir="$RUNNER_TEMP/flatc"
+          gh release download "$tag" --repo OyiGames/flatbuffers --pattern "flatc-$tag-linux-x64.zip" --pattern SHA256SUMS --dir "$dir"
+          (cd "$dir" && grep " flatc-$tag-linux-x64.zip\$" SHA256SUMS | sha256sum -c -)
+          unzip -q "$dir/flatc-$tag-linux-x64.zip" -d "$dir"
+          chmod +x "$dir/flatc"
+          echo "$dir" >> "$GITHUB_PATH"
       - name: Generated bindings are up to date
         run: python scripts/generate_protocol.py --check
 

@@ -107,11 +107,9 @@ internal static class EnvelopeCodec
     public static Incoming Decode(ReadOnlySpan<byte> frame)
     {
         var buffer = new ByteBuffer(frame.ToArray());
-        // VerifyEnvelope alone does not check the identifier: the FlatBuffers 25.12.19 C# Verifier skips it whenever
-        // one is given (CheckBufferFromStart tests `identifier.Length == 0`), so test it explicitly.
-        if (frame.Length < Framing.HeaderSize * 2
-            || !Wire.Envelope.EnvelopeBufferHasIdentifier(buffer)
-            || !Wire.Envelope.VerifyEnvelope(buffer))
+        // VerifyEnvelope also checks the OYIP identifier. Upstream 25.12.19 skipped that check; the runtime vendored
+        // from OyiGames/flatbuffers (v25.12.19-oyi.1) fixes it, and EnvelopeCodecTests guards against a regression.
+        if (frame.Length < Framing.HeaderSize * 2 || !Wire.Envelope.VerifyEnvelope(buffer))
         {
             throw new ProtocolException($"Received {frame.Length} bytes that are not a valid OYIP envelope.");
         }

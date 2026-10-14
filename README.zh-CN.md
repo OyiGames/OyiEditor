@@ -22,10 +22,11 @@ dotnet format OyiEditor.slnx --verify-no-changes --exclude protocol src/OyiEdito
 
 `protocol/` 是锁定到某个 tag 的 [OyiProtocol](https://github.com/OyiGames/OyiProtocol)。
 `src/OyiEditor.Protocol.Schema/Generated/` 里的 C# 绑定由 flatc 生成并提交，构建不需要 flatc。子模块换 tag 后，
-用协议仓库锁定的 flatc 版本重新生成：
+用协议仓库锁定的 flatc 重新生成（来自 fork [OyiGames/flatbuffers](https://github.com/OyiGames/flatbuffers/releases)
+的 release，tag 见 `protocol/.github/workflows/ci.yml` 的 `FLATBUFFERS_TAG`）：
 
 ```bash
-git -C protocol checkout v0.1.0
+git -C protocol checkout v0.1.2
 python scripts/generate_protocol.py --flatc path/to/flatc
 ```
 
